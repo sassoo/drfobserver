@@ -1,0 +1,4 @@
+site_name: drfobserver
+site_description: Django Rest Framework object observer pattern
+repo_url: https://github.com/sassoo/drfobserver
+site_dir: html
