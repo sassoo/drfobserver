@@ -6,6 +6,8 @@
     pattern.
 """
 
+import inspect
+
 
 __all__ = ('ObserverMixin',)
 
@@ -35,7 +37,7 @@ class ObserverMixin(object):
         super(ObserverMixin, self).__init__(*args, **kwargs)
 
         self._observers = {}
-        for key, val in self.__class__.__dict__.items():
+        for key, val in inspect.getmembers(self, inspect.ismethod):
             if hasattr(val, '_observer_fields'):
                 func = getattr(self, key)
                 for field in func._observer_fields:
