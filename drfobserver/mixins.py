@@ -37,14 +37,14 @@ class ObserverMixin:
         super().__init__(*args, **kwargs)
 
         self._observers = defaultdict(list)
-        props = self.__class__.__dict__.values()
-        funcs = filter(lambda p: hasattr(p, '_observed_fields'), props)
+        props = filter(lambda p: p.startswith('_observe_'), dir(self))
 
-        for func in funcs:
-            for field in func._observed_fields:
+        for prop in props:
+            func = getattr(self, prop)
+            for field in getattr(func, '_observed_fields', ()):
                 self._observers[field].append(func)
                 if self.pk is None:
-                    func(self)
+                    func()
 
     def __setattr__(self, name, value):
         """ Run the decorated method if its dependent field is changed
@@ -58,6 +58,6 @@ class ObserverMixin:
 
         try:
             for func in self._observers[name]:
-                func(self)
+                func()
         except (AttributeError, KeyError):
             pass
