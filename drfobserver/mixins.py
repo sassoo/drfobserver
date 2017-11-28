@@ -6,13 +6,13 @@
     pattern.
 """
 
-import inspect
+from collections import defaultdict
 
 
 __all__ = ('ObserverMixin',)
 
 
-class ObserverMixin(object):
+class ObserverMixin:
     """ Simplistic observer pattern mixin
 
     This is to keep fields in sync when dependent fields are mutated.
@@ -34,20 +34,17 @@ class ObserverMixin(object):
         the latest data if the object is NEW.
         """
 
-        super(ObserverMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
-        self._observers = {}
-        for key, val in inspect.getmembers(self, inspect.ismethod):
-            if hasattr(val, '_observer_fields'):
-                func = getattr(self, key)
-                for field in func._observer_fields:
-                    try:
-                        self._observers[field].append(func)
-                    except KeyError:
-                        self._observers[field] = [func]
-                # new object test
+        self._observers = defaultdict(list)
+        props = self.__class__.__dict__.values()
+        funcs = filter(lambda p: hasattr(p, '_observed_fields'), props)
+
+        for func in funcs:
+            for field in func._observed_fields:
+                self._observers[field].append(func)
                 if self.pk is None:
-                    func()
+                    func(self)
 
     def __setattr__(self, name, value):
         """ Run the decorated method if its dependent field is changed
@@ -57,10 +54,10 @@ class ObserverMixin(object):
               until the constructor has finished.
         """
 
-        super(ObserverMixin, self).__setattr__(name, value)
+        super().__setattr__(name, value)
 
         try:
             for func in self._observers[name]:
-                func()
+                func(self)
         except (AttributeError, KeyError):
             pass
