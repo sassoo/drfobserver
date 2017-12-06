@@ -25,6 +25,9 @@ def observer(*fields):
     def observer_wrapper(func):
         """ Add the hidden property with the fields to observe """
 
+        assert func.__name__.startswith('_observe_'), \
+            'Observed method names must begin with "_observer_" not %s' % func.__name__
+        # pylint: disable=protected-access
         func._observed_fields = fields
         return func
     return observer_wrapper
